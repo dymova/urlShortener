@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
+	"os"
 	"urlShortener/controllers"
 	"urlShortener/middlewares"
 )
@@ -25,6 +26,7 @@ func main() {
 
 	api := router.Group("/api")
 	api.Use(middlewares.JwtAuth)
-
-	_ = router.Run(":8080")
+	api.POST("/shorten", controllers.Shorten)
+	api.GET("/redirect/:shortCode", controllers.Redirect)
+	_ = router.Run(os.Getenv("BASE_URL"))
 }
