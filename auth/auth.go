@@ -37,7 +37,7 @@ func IssueJWTToken(user string) (string, error) {
 	return tokenString, nil
 }
 
-func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
+func ExtractJWTToken(tokenString string) (*jwt.Token, error) {
 	// validate token and exp data
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -48,10 +48,23 @@ func VerifyJWTToken(tokenString string) (jwt.MapClaims, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	} else {
+	if token.Valid != true {
 		return nil, fmt.Errorf("invalid token")
+	}
+	return token, nil
+}
+
+func ExtractJWTTokenUser(tokenString string) (string, error) {
+	token, err := ExtractJWTToken(tokenString)
+	if err != nil {
+		return "", err
+	}
+	claims, isValid := token.Claims.(jwt.MapClaims)
+	if isValid != true {
+		return "", fmt.Errorf("invalid token")
+	} else {
+		user := claims["user_id"].(string)
+		//todo check that such user exist
+		return user, nil
 	}
 }

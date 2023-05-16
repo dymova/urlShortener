@@ -12,12 +12,13 @@ import (
 type Url struct {
 	full      string
 	shortened string
+	owner     string
 }
 
-func ShortenUrl(url string) (string, error) {
+func ShortenUrl(url string, user string) (string, error) {
 	//todo handle colisions
-	shortened := os.Getenv("BASE_URL") + "/redirect/" + GenerateRandomString()
-	_, err := DB.Exec("INSERT INTO urls (long, short) VALUES (?, ?)", url, shortened)
+	shortened := os.Getenv("BASE_URL") + "/redirect/" + generateRandomString()
+	_, err := DB.Exec("INSERT INTO urls (long, short, owner) VALUES (?, ?, ?)", url, shortened, user)
 	if err == nil {
 		return "", err
 	}
@@ -27,7 +28,7 @@ func ShortenUrl(url string) (string, error) {
 
 const length = 10
 
-func GenerateRandomString() string {
+func generateRandomString() string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 	var builder strings.Builder
@@ -51,4 +52,27 @@ func GetFullUrl(shortCode string) (string, error) {
 		return "", fmt.Errorf("GetFullUrl %v: %v", shortCode, err)
 	}
 	return full, nil
+}
+
+func GetUsersUrls(user string) ([]Url, error) {
+	// An albums slice to hold data from returned rows.
+	var albums []Url
+
+	rows, err := DB.Query("SELECT * urls urls WHERE owner = ?", user)
+	if err != nil {
+		return nil, fmt.Errorf("GetUsersUrls %q: %v", user, err)
+	}
+	defer rows.Close()
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var url Url
+		if err := rows.Scan(&url.full, &url.shortened, &url.owner); err != nil {
+			return nil, fmt.Errorf("GetUsersUrls %q: %v", user, err)
+		}
+		albums = append(albums, url)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("GetUsersUrls %q: %v", user, err)
+	}
+	return albums, nil
 }
