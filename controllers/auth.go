@@ -7,8 +7,8 @@ import (
 )
 
 type LoginInput struct {
-	login    string
-	password string
+	Login    string `json:"login" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 func Register(c *gin.Context) {
@@ -19,14 +19,14 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	err := models.SaveUser(input.login, input.password)
+	err := models.SaveUser(input.Login, input.Password)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "registration success"})
+	c.JSON(http.StatusOK, gin.H{"message": "registration successful"})
 }
 
 func Login(c *gin.Context) {
@@ -37,7 +37,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := models.LoginCheck(input.login, input.password)
+	token, err := models.LoginCheck(input.Login, input.Password)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "username or password is incorrect."})
@@ -45,8 +45,4 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
-}
-
-type ShortenInput struct {
-	url string
 }

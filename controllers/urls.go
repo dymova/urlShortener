@@ -7,6 +7,10 @@ import (
 	"urlShortener/models"
 )
 
+type ShortenInput struct {
+	Url string `json:"url" binding:"required"`
+}
+
 func Shorten(c *gin.Context) {
 	var input ShortenInput
 
@@ -22,7 +26,7 @@ func Shorten(c *gin.Context) {
 		return
 	}
 
-	shortenUrl, err := models.ShortenUrl(input.url, user)
+	shortenUrl, err := models.ShortenUrl(input.Url, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to shorten url"})
 		return
