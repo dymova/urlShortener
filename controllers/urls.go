@@ -64,6 +64,11 @@ func Redirect(c *gin.Context) {
 	c.Redirect(http.StatusFound, fullUrl)
 }
 
+type UrlOutput struct {
+	Full      string `json:"full"`
+	ShortCode string `json:"shortCode"`
+}
+
 func UrlsList(c *gin.Context) {
 	user, err := getUser(c)
 	if err != nil {
@@ -73,7 +78,12 @@ func UrlsList(c *gin.Context) {
 	urls, err := models.GetUsersUrls(user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unable to find user's urls"})
+		return
 	}
-	//todo check how it is serialised
-	c.JSON(http.StatusOK, gin.H{"urls": urls})
+	var urlOutputs []UrlOutput
+	for _, url := range urls {
+		urlOutputs = append(urlOutputs, UrlOutput{url.Full, url.ShortCode})
+	}
+
+	c.JSON(http.StatusOK, urlOutputs)
 }

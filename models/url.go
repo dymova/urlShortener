@@ -11,15 +11,15 @@ import (
 
 type Url struct {
 	id        string
-	full      string
-	shortened string
+	Full      string
+	ShortCode string
 	owner     string
 }
 
 func ShortenUrl(url string, userId int) (string, error) {
 	//todo handle colisions
 	shortCode := generateRandomString()
-	_, err := DB.Exec("INSERT INTO urls (full, shortened, owner) VALUES (?, ?, ?)", url, shortCode, userId)
+	_, err := DB.Exec("INSERT INTO urls (full, shortCode, owner) VALUES (?, ?, ?)", url, shortCode, userId)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +45,7 @@ func generateRandomString() string {
 
 func GetFullUrl(shortCode string) (string, error) {
 	var full string
-	row := DB.QueryRow("SELECT full FROM urls WHERE shortened=?", shortCode)
+	row := DB.QueryRow("SELECT full FROM urls WHERE shortCode=?", shortCode)
 	if err := row.Scan(&full); err != nil {
 		if err == sql.ErrNoRows {
 			return "", fmt.Errorf("GetFullUrl %v: no such url", shortCode)
@@ -56,10 +56,10 @@ func GetFullUrl(shortCode string) (string, error) {
 }
 
 func GetUsersUrls(user User) ([]Url, error) {
-	// An albums slice to hold data from returned rows.
-	var albums []Url
+	// An urls slice to hold data from returned rows.
+	var urls []Url
 
-	rows, err := DB.Query("SELECT * urls urls WHERE owner = ?", user)
+	rows, err := DB.Query("SELECT id, full, shortCode, owner  FROM urls WHERE owner = ?", user.Id)
 	if err != nil {
 		return nil, fmt.Errorf("GetUsersUrls %q: %v", user, err)
 	}
@@ -67,13 +67,13 @@ func GetUsersUrls(user User) ([]Url, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var url Url
-		if err := rows.Scan(&url.full, &url.shortened, &url.owner); err != nil {
+		if err := rows.Scan(&url.id, &url.Full, &url.ShortCode, &url.owner); err != nil {
 			return nil, fmt.Errorf("GetUsersUrls %q: %v", user, err)
 		}
-		albums = append(albums, url)
+		urls = append(urls, url)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("GetUsersUrls %q: %v", user, err)
 	}
-	return albums, nil
+	return urls, nil
 }

@@ -12,7 +12,7 @@ CREATE TABLE users
 CREATE TABLE urls
 (
     id    INT AUTO_INCREMENT NOT NULL,
-    shortened VARCHAR(255) NOT NULL UNIQUE,
+    shortCode VARCHAR(255) NOT NULL UNIQUE,
     full  TEXT         NOT NULL,
     owner INT         NOT NULL,
     PRIMARY KEY (`id`),

@@ -39,7 +39,6 @@ func LoginCheck(login string, password string) (string, error) {
 		return "", fmt.Errorf("LoginCheck %v: invalid password", login)
 	}
 
-	//todo use id instead login
 	token, err := auth.IssueJWTToken(user.Id)
 
 	if err != nil {
