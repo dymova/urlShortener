@@ -16,15 +16,15 @@ type Url struct {
 	owner     string
 }
 
-func ShortenUrl(url string, user string) (string, error) {
+func ShortenUrl(url string, userId int) (string, error) {
 	//todo handle colisions
-	shortened := os.Getenv("BASE_URL") + "/redirect/" + generateRandomString()
-	_, err := DB.Exec("INSERT INTO urls (full, shortened, owner) VALUES (?, ?, ?)", url, shortened, user)
-	if err == nil {
+	shortCode := generateRandomString()
+	_, err := DB.Exec("INSERT INTO urls (full, shortened, owner) VALUES (?, ?, ?)", url, shortCode, userId)
+	if err != nil {
 		return "", err
 	}
 
-	return shortened, nil
+	return os.Getenv("BASE_URL") + "/redirect/" + shortCode, nil
 }
 
 const length = 10
@@ -55,7 +55,7 @@ func GetFullUrl(shortCode string) (string, error) {
 	return full, nil
 }
 
-func GetUsersUrls(user string) ([]Url, error) {
+func GetUsersUrls(user User) ([]Url, error) {
 	// An albums slice to hold data from returned rows.
 	var albums []Url
 

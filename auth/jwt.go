@@ -3,25 +3,11 @@ package auth
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/crypto/bcrypt"
 	"os"
 	"time"
 )
 
-func HashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-	if err != nil {
-		return "", err
-	}
-	return string(hash), nil
-}
-
-func VerifyPassword(password, hashedPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err == nil
-}
-
-func IssueJWTToken(user string) (string, error) {
+func IssueJWTToken(user int) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
@@ -54,17 +40,15 @@ func ExtractJWTToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func ExtractJWTTokenUser(tokenString string) (string, error) {
+func ExtractJWTTokenUser(tokenString string) (int, error) {
 	token, err := ExtractJWTToken(tokenString)
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 	claims, isValid := token.Claims.(jwt.MapClaims)
 	if isValid != true {
-		return "", fmt.Errorf("invalid token")
+		return -1, fmt.Errorf("invalid token")
 	} else {
-		user := claims["user_id"].(string)
-		//todo check that such user exist
-		return user, nil
+		return int(claims["user_id"].(float64)), nil
 	}
 }

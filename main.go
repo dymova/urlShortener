@@ -28,7 +28,8 @@ func main() {
 	api := router.Group("/api")
 	api.Use(middlewares.JwtAuth)
 	api.POST("/shorten", controllers.Shorten)
-	api.GET("/redirect/:shortCode", controllers.Redirect)
 	api.GET("/list", controllers.UrlsList)
+
+	router.GET("/redirect/:shortCode", controllers.Redirect)
 	_ = router.Run(os.Getenv("BASE_URL"))
 }

@@ -19,14 +19,17 @@ func Shorten(c *gin.Context) {
 		return
 	}
 
-	token := c.GetHeader("Authorization")
-	user, err := auth.ExtractJWTTokenUser(token)
+	user, err := getUser(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to parse user id"})
 		return
 	}
 
-	shortenUrl, err := models.ShortenUrl(input.Url, user)
+	shortenUrl, err := models.ShortenUrl(input.Url, user.Id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to shorten url"})
 		return
@@ -35,25 +38,36 @@ func Shorten(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"url": shortenUrl})
 }
 
+func getUser(c *gin.Context) (models.User, error) {
+	token := c.GetHeader("Authorization")
+	userId, err := auth.ExtractJWTTokenUser(token)
+	if err != nil {
+		var user models.User
+		return user, err
+	}
+	return models.GetUser(userId)
+}
+
 func Redirect(c *gin.Context) {
 	shortCode := c.Param("shortCode")
 	if shortCode == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid url"})
+		return
 	}
 
 	fullUrl, err := models.GetFullUrl(shortCode)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unable to find full url"})
+		return
 	}
 
-	c.Redirect(http.StatusOK, fullUrl)
+	c.Redirect(http.StatusFound, fullUrl)
 }
 
 func UrlsList(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	user, err := auth.ExtractJWTTokenUser(token)
+	user, err := getUser(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to parse user id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	urls, err := models.GetUsersUrls(user)

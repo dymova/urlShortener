@@ -3,17 +3,18 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"urlShortener/auth"
 )
 
 type User struct {
-	id       int
-	login    string
-	password string
+	Id       int
+	Login    string
+	Password string
 }
 
 func SaveUser(login string, password string) error {
-	hash, err := auth.HashPassword(password)
+	hash, err := hashPassword(password)
 	if err != nil {
 		return err
 	}
@@ -26,24 +27,49 @@ func SaveUser(login string, password string) error {
 
 func LoginCheck(login string, password string) (string, error) {
 	var user User
-	row := DB.QueryRow("SELECT password from users where login=?", login)
-	if err := row.Scan(&user.login, &user.password); err != nil {
+	row := DB.QueryRow("SELECT id, login, password from users where login = ?", login)
+	if err := row.Scan(&user.Id, &user.Login, &user.Password); err != nil {
 		if err == sql.ErrNoRows {
 			return "", fmt.Errorf("LoginCheck %v: no such user", login)
 		}
 		return "", fmt.Errorf("LoginCheck %v: %v", login, err)
 	}
 
-	if auth.VerifyPassword(password, user.password) == false {
+	if verifyPassword(password, user.Password) == false {
 		return "", fmt.Errorf("LoginCheck %v: invalid password", login)
 	}
 
 	//todo use id instead login
-	token, err := auth.IssueJWTToken(user.login)
+	token, err := auth.IssueJWTToken(user.Id)
 
 	if err != nil {
 		return "", err
 	}
 
 	return token, nil
+}
+
+func GetUser(id int) (User, error) {
+	var user User
+	row := DB.QueryRow("SELECT id, login, password from users where id = ?", id)
+	if err := row.Scan(&user.Id, &user.Login, &user.Password); err != nil {
+		if err == sql.ErrNoRows {
+			return user, fmt.Errorf("GetUser %v: no such user", id)
+		}
+		return user, fmt.Errorf("GetUser %v: %v", id, err)
+	}
+	return user, nil
+}
+
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+func verifyPassword(password, hashedPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
 }
