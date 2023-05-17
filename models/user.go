@@ -7,16 +7,17 @@ import (
 )
 
 type User struct {
-	Login    string
-	Password string
+	id       int
+	login    string
+	password string
 }
 
-func (u *User) SaveUser() error {
-	hash, err := auth.HashPassword(u.Password)
+func SaveUser(login string, password string) error {
+	hash, err := auth.HashPassword(password)
 	if err != nil {
 		return err
 	}
-	_, err = DB.Exec("INSERT INTO users (login, password) VALUES (?, ?, ?)", u.Login, hash)
+	_, err = DB.Exec("INSERT INTO users (login, password) VALUES (?, ?)", login, hash)
 	if err != nil {
 		return err
 	}
@@ -26,19 +27,19 @@ func (u *User) SaveUser() error {
 func LoginCheck(login string, password string) (string, error) {
 	var user User
 	row := DB.QueryRow("SELECT password from users where login=?", login)
-	if err := row.Scan(&user.Login, &user.Password); err != nil {
+	if err := row.Scan(&user.login, &user.password); err != nil {
 		if err == sql.ErrNoRows {
 			return "", fmt.Errorf("LoginCheck %v: no such user", login)
 		}
 		return "", fmt.Errorf("LoginCheck %v: %v", login, err)
 	}
 
-	if auth.VerifyPassword(password, user.Password) == false {
+	if auth.VerifyPassword(password, user.password) == false {
 		return "", fmt.Errorf("LoginCheck %v: invalid password", login)
 	}
 
 	//todo use id instead login
-	token, err := auth.IssueJWTToken(user.Login)
+	token, err := auth.IssueJWTToken(user.login)
 
 	if err != nil {
 		return "", err

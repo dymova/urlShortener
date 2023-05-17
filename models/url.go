@@ -10,6 +10,7 @@ import (
 )
 
 type Url struct {
+	id        string
 	full      string
 	shortened string
 	owner     string
@@ -18,7 +19,7 @@ type Url struct {
 func ShortenUrl(url string, user string) (string, error) {
 	//todo handle colisions
 	shortened := os.Getenv("BASE_URL") + "/redirect/" + generateRandomString()
-	_, err := DB.Exec("INSERT INTO urls (long, short, owner) VALUES (?, ?, ?)", url, shortened, user)
+	_, err := DB.Exec("INSERT INTO urls (full, shortened, owner) VALUES (?, ?, ?)", url, shortened, user)
 	if err == nil {
 		return "", err
 	}

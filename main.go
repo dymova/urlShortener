@@ -7,6 +7,7 @@ import (
 	"os"
 	"urlShortener/controllers"
 	"urlShortener/middlewares"
+	"urlShortener/models"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	//models.ConnectDataBase() todo
+	models.ConnectDataBase()
 
 	router := gin.Default()
 

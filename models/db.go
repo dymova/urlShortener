@@ -13,11 +13,11 @@ var DB *sql.DB
 func ConnectDataBase() {
 	// Capture connection properties.
 	cfg := mysql.Config{
-		User:   os.Getenv("DBUSER"),
-		Passwd: os.Getenv("DBPASS"),
+		User:   os.Getenv("DB_USER"),
+		Passwd: os.Getenv("DB_PASS"),
 		Net:    "tcp",
 		Addr:   "127.0.0.1:3306",
-		DBName: "users",
+		DBName: "url-shortener-db",
 	}
 	var err error
 	DB, err = sql.Open("mysql", cfg.FormatDSN())
